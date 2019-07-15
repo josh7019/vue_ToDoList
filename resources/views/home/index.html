@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="_token" content="{{ csrf_token() }}"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <title>Document</title>
+</head>
+<body>
+    
+    <div class='container'>
+        <div id="nowTime">{{nowtime}}</div>
+        <div>
+            <!-- 待辦新增表格 -->
+            <div id='addTodoList'>
+                <form class="form-horizontal">
+                        <fieldset>
+                        
+                        <!-- Form Name -->
+                        <legend>待辦清單</legend>
+                        
+                        <!-- Text input-->
+                        <div class="form-group">
+                          <label class="col-md-4 control-label" for="textinput">待辦日期</label>  
+                          <div class="col-md-4">
+                          <input v-model='todoTime' id="textinput" name="textinput" type="date" placeholder="" class="form-control input-md">
+                            
+                          </div>
+                        </div>
+                        
+                        <!-- Text input-->
+                        <div class="form-group">
+                          <label class="col-md-4 control-label" for="textinput">待辦事項</label>  
+                          <div class="col-md-4">
+                          <input v-model='todoWhat' id="textinput" name="textinput" type="text" placeholder="" class="form-control input-md">
+                            
+                          </div>
+                        </div>
+                        
+                        <!-- Textarea -->
+                        <div class="form-group">
+                          <label class="col-md-4 control-label" for="textarea">待辦內容</label>
+                          <div class="col-md-4">                     
+                            <textarea v-model='todoContent' class="form-control" id="textarea" name="textarea"></textarea>
+                          </div>
+                        </div>
+                        
+                        <!-- Button -->
+                        <div class="form-group">
+                          <label class="col-md-4 control-label" for=""></label>
+                          <div class="col-md-4">
+                            <button type="button" v-on:click='addOne' class="btn btn-primary">Add</button>
+                          </div>
+                        </div>
+                        
+                        </fieldset>
+                        </form>
+                <h1>{{todoTime}}</h1><br>
+                <!-- <h1>{{todoWhat}}</h1><br>
+                <h1>{{todoContent}}</h1> -->
+            </div><!-- 待辦新增表格結束 -->
+            
+
+            <!-- 待辦清單顯示區 -->
+                <table class="table table-striped" id='showTodoList'>
+                    <thead>
+                        <tr>
+                            <th>待辦日期</th>
+                            <th>待辦事項</th>
+                            <th>待辦內容</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for='(todoItem,index) in todoList'>
+                            <td>{{todoItem.todoTime}}</td>
+                            <td>{{todoItem.todoWhat}}</td>
+                            <td>{{todoItem.todoContent}}</td>
+                            <td><button class="btn btn-success" v-on:click='completed(index)'>
+                                <span class='glyphicon glyphicon-ok'></span>完成
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table><!-- 待辦清單顯示區結束 -->
+            
+        </div>
+    </div>
+    
+    <script>
+        // Vue.component('todo-item',{template: "<tr><td>111</td></tr>"});
+        // Vue.component('todo-one',{
+
+        //     template: "<tr><td>111</td></tr>"
+        //     });
+
+        //待辦新增Vue 
+        var addTodoList = new Vue({
+            el: '#addTodoList',
+            data: {
+                todoWhat: '',
+                todoTime: new Date().getFullYear() + "-" + (new Date().getMonth() + 1) + "-" + new Date().getDate(),
+                todoContent: '',
+                test: '',
+
+            }, methods: {
+                addOne: function () {
+                    showTodoList.todoList.push({
+                        todoWhat: this.todoWhat,
+                        todoTime: this.todoTime,
+                        todoContent: this.todoContent
+                    });
+                    _this = showTodoList.todoList[showTodoList.todoList.length - 1];
+
+                    let newTodo = {
+                        'title': _this.todoWhat,
+                        'todoDate': _this.todoTime,
+                        'content': _this.todoContent
+                    }
+                    console.log(newTodo);
+                    $.ajax({
+                        type: 'get',
+                        url: 'todo/create',
+                        // contentType:'application/json',
+                        data: newTodo,
+                        success: function (signal) {
+                            // alert(signal);
+                            // console.log(signal);
+                        }
+                    })
+                    // console.log(showTodoList.todoList[this.todoList.length-1])
+                }
+            }
+        })
+
+        //待辦清單顯示Vue
+        var showTodoList = new Vue({
+            el: '#showTodoList',
+            data: {
+                todoList: []
+            },
+            methods: {
+                completed: function (index) {
+
+                    if (confirm('確認完成?')) {
+                        let deleteItem = this.todoList[index];
+                        this.todoList.splice(index, 1);
+                        console.log(deleteItem);
+                        $.ajax({
+                            type: 'get',
+                            url: '/todoDelete',
+                            data: deleteItem,
+                            // headers: {
+                            //             'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
+                            //         },
+                            success: function (todoList) {
+                                // alert(todoList);
+                                // console.log(todoList)
+                            }
+                        })
+                    }
+
+
+                }
+            }
+        })
+
+
+        var nowTime = new Vue({
+            el: '#nowTime',
+            data: {
+                nowtime: new Date().getFullYear() + "-" + (new Date().getMonth() + 1) + "-" + new Date().getDate() + " " + new Date().getHours() + ":" + new Date().getMinutes() + ":" + new Date().getSeconds(),
+            }
+
+        })
+
+        setInterval(function () {
+            nowTime.nowtime = new Date().getFullYear() + "-" + (new Date().getMonth() + 1) + "-" + new Date().getDate() + " " + new Date().getHours() + ":" + new Date().getMinutes() + ":" + new Date().getSeconds();
+        }, 1000)
+
+        //          使用ajax取得資料庫資料
+        $.ajax({
+            type: 'get',
+            url: '/todo',
+            success: function (todoList) {
+                // alert(todoList);
+                // console.log(todoList)
+                for (let todoItem of todoList) {
+                    showTodoList.todoList.push({
+                        todoWhat: todoItem.title,
+                        todoTime: todoItem.todoDate,
+                        todoContent: todoItem.content,
+                        id: todoItem.id
+                    });
+                }
+            }
+        })
+    </script>
+</body>
+</html>
